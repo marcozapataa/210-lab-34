@@ -3,6 +3,7 @@
 #include <stack>
 #include <queue>
 #include <string>
+#include <tuple>
 #include <functional>
 #include <climits>
 using namespace std;
@@ -204,6 +205,34 @@ void shortestPaths(Graph &g, int start) {
 	}
 }
 
+// Minimum spanning tree (Prim's algorithm): starting at the given facility,
+// repeatedly add the cheapest route that reaches a facility not yet connected.
+void minimumSpanningTree(Graph &g, int start) {
+	cout << "Minimum Spanning Tree edges:" << endl;
+
+	// each queue entry is (route distance, facility reached, facility it came from)
+	typedef tuple<int, int, int> Candidate;
+	priority_queue<Candidate, vector<Candidate>, greater<Candidate>> pq;
+	vector<bool> inTree(SIZE, false);
+
+	pq.push(make_tuple(0, start, -1));
+	while (!pq.empty()) {
+		int miles = get<0>(pq.top());
+		int v = get<1>(pq.top());
+		int from = get<2>(pq.top());
+		pq.pop();
+		if (inTree[v])
+			continue; // already connected by a cheaper route
+		inTree[v] = true;
+		if (from != -1)
+			cout << "Edge from " << v << " to " << from
+			     << " with distance: " << miles << " miles" << endl;
+		for (Pair p : g.adjList[v])
+			if (!inTree[p.first])
+				pq.push(make_tuple(p.second, p.first, v));
+	}
+}
+
 int main() {
 	// Creates a vector of graph edges/weights (weight = route length in miles)
 	vector<Edge> edges = {
@@ -221,5 +250,7 @@ int main() {
 	layerInspectionBFS(graph, 0);
 	cout << endl;
 	shortestPaths(graph, 0);
+	cout << endl;
+	minimumSpanningTree(graph, 0);
 	return 0;
 }
