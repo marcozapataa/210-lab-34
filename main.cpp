@@ -2,6 +2,7 @@
 #include <vector>
 #include <stack>
 #include <queue>
+#include <string>
 using namespace std;
 const int SIZE = 9;
 struct Edge {
@@ -77,22 +78,109 @@ public:
 		cout << endl;
 	}
 };
+
+// ---------------------------------------------------------------------------
+// APPLICATION LAYER: Regional Parcel Delivery Network
+// Each vertex is a facility; each edge is a two-way truck route whose weight
+// is the driving distance in miles.
+// ---------------------------------------------------------------------------
+const string ROLES[SIZE] = {
+	"Central Warehouse",   // 0
+	"Downtown Depot",      // 1
+	"Airport Cargo Hub",   // 2
+	"Rail Terminal",       // 3
+	"Seaport Dock",        // 4
+	"Northgate Locker",    // 5
+	"Lakeside Store",      // 6
+	"Hillcrest Center",    // 7
+	"Riverside Hub"        // 8
+};
+
+// "Facility 2 (Airport Cargo Hub)"
+string label(int v) {
+	return "Facility " + to_string(v) + " (" + ROLES[v] + ")";
+}
+
+// Prints a heading followed by a line of '=' the same length
+void heading(const string &text) {
+	cout << text << endl;
+	cout << string(text.size(), '=') << endl;
+}
+
+// Prints every facility and the routes that connect to it
+void printNetwork(Graph &g) {
+	heading("Regional Parcel Delivery Network Topology:");
+	for (int i = 0; i < SIZE; i++) {
+		cout << label(i) << " connects to:" << endl;
+		for (Pair p : g.adjList[i])
+			cout << " -> Facility " << p.first
+			     << " (Distance: " << p.second << " miles)" << endl;
+	}
+}
+
+// DFS trace: a vertex is marked as discovered when it is pushed, so only
+// newly discovered neighbors are pushed (and reported) from each facility.
+void networkTraceDFS(Graph &g, int start) {
+	cout << "Network Trace (DFS) from " << label(start) << ":" << endl;
+	cout << "Purpose: Tracing how a shipping delay could spread through the network" << endl;
+	cout << string(66, '=') << endl;
+	vector<bool> discovered(SIZE, false);
+	stack<int> s;
+	discovered[start] = true;
+	s.push(start);
+	while (!s.empty()) {
+		int v = s.top();
+		s.pop();
+		cout << "Inspecting " << label(v) << endl;
+		for (Pair p : g.adjList[v]) {
+			if (!discovered[p.first]) {
+				discovered[p.first] = true;
+				s.push(p.first);
+				cout << "  -> Possible delay spread to " << label(p.first)
+				     << " - Distance: " << p.second << " miles" << endl;
+			}
+		}
+	}
+}
+
+// BFS review: a vertex is marked as discovered when it is enqueued
+void layerInspectionBFS(Graph &g, int start) {
+	cout << "Layer-by-Layer Network Review (BFS) from " << label(start) << ":" << endl;
+	cout << "Purpose: Grouping delivery zones by number of stops from the warehouse" << endl;
+	cout << string(70, '=') << endl;
+	vector<bool> discovered(SIZE, false);
+	queue<int> q;
+	discovered[start] = true;
+	q.push(start);
+	while (!q.empty()) {
+		int v = q.front();
+		q.pop();
+		cout << "Checking " << label(v) << endl;
+		for (Pair p : g.adjList[v]) {
+			if (!discovered[p.first]) {
+				discovered[p.first] = true;
+				q.push(p.first);
+				cout << "  -> Next delivery zone: " << label(p.first)
+				     << " - Distance: " << p.second << " miles" << endl;
+			}
+		}
+	}
+}
+
 int main() {
-	// Creates a vector of graph edges/weights
+	// Creates a vector of graph edges/weights (weight = route length in miles)
 	vector<Edge> edges = {
 		// (x, y, w) —> edge from x to y having weight w
 		{0,1,8},{0,2,21},{1,2,6},{1,3,5},{1,4,4},{3,4,9},
-        {5,6,10},{6,7,3},{5,7,15},{5,8,5},{6,8,7},{2,7,11},{2,8,8}
+		{5,6,10},{6,7,3},{5,7,15},{5,8,5},{6,8,7},{2,7,11},{2,8,8}
 	};
 	// Creates graph
 	Graph graph(edges);
-	// Prints adjacency list representation of graph
-	graph.printGraph();
 
-	cout << "DFS starting from vertex 0:" << endl;
-	graph.DFS(0);
-
-	cout << "BFS starting from vertex 0:" << endl;
-	graph.BFS(0);
+	printNetwork(graph);
+	cout << endl;
+	networkTraceDFS(graph, 0);
+	cout << endl;
+	layerInspectionBFS(graph, 0);
 	return 0;
 }
