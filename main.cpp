@@ -3,6 +3,8 @@
 #include <stack>
 #include <queue>
 #include <string>
+#include <functional>
+#include <climits>
 using namespace std;
 const int SIZE = 9;
 struct Edge {
@@ -113,7 +115,7 @@ void printNetwork(Graph &g) {
 	for (int i = 0; i < SIZE; i++) {
 		cout << label(i) << " connects to:" << endl;
 		for (Pair p : g.adjList[i])
-			cout << " -> Facility " << p.first
+			cout << "  -> Facility " << p.first
 			     << " (Distance: " << p.second << " miles)" << endl;
 	}
 }
@@ -167,6 +169,41 @@ void layerInspectionBFS(Graph &g, int start) {
 	}
 }
 
+// Shortest paths (Dijkstra's algorithm): finds the minimum total distance from
+// the start facility to every other facility, always settling the closest
+// facility that has not been finalized yet.
+void shortestPaths(Graph &g, int start) {
+	vector<int> dist(SIZE, INT_MAX);
+	// each queue entry is (distance so far, facility)
+	priority_queue<Pair, vector<Pair>, greater<Pair>> pq;
+	dist[start] = 0;
+	pq.push(make_pair(0, start));
+	while (!pq.empty()) {
+		int d = pq.top().first;
+		int v = pq.top().second;
+		pq.pop();
+		if (d > dist[v])
+			continue; // stale entry: a shorter route was already found
+		for (Pair p : g.adjList[v]) {
+			int next = p.first;
+			int newDist = d + p.second;
+			if (newDist < dist[next]) {
+				dist[next] = newDist;
+				pq.push(make_pair(newDist, next));
+			}
+		}
+	}
+
+	cout << "Shortest path from node " << start << ":" << endl;
+	for (int i = 0; i < SIZE; i++) {
+		cout << start << " -> " << i << " : ";
+		if (dist[i] == INT_MAX)
+			cout << "unreachable" << endl;
+		else
+			cout << dist[i] << endl;
+	}
+}
+
 int main() {
 	// Creates a vector of graph edges/weights (weight = route length in miles)
 	vector<Edge> edges = {
@@ -182,5 +219,7 @@ int main() {
 	networkTraceDFS(graph, 0);
 	cout << endl;
 	layerInspectionBFS(graph, 0);
+	cout << endl;
+	shortestPaths(graph, 0);
 	return 0;
 }
