@@ -6,6 +6,7 @@
 #include <tuple>
 #include <functional>
 #include <climits>
+#include <limits>
 using namespace std;
 const int SIZE = 9;
 struct Edge {
@@ -233,6 +234,18 @@ void minimumSpanningTree(Graph &g, int start) {
 	}
 }
 
+// Prints the main menu and the input prompt
+void printMenu() {
+	cout << "Delivery Network Menu:" << endl;
+	cout << "[1] Display delivery network" << endl;
+	cout << "[2] Review delivery zones (BFS)" << endl;
+	cout << "[3] Trace delay spread (DFS)" << endl;
+	cout << "[4] Calculate shortest paths" << endl;
+	cout << "[5] Find Minimum Spanning Tree" << endl;
+	cout << "[0] Exit" << endl;
+	cout << "Enter your choice: ";
+}
+
 int main() {
 	// Creates a vector of graph edges/weights (weight = route length in miles)
 	vector<Edge> edges = {
@@ -243,14 +256,42 @@ int main() {
 	// Creates graph
 	Graph graph(edges);
 
-	printNetwork(graph);
-	cout << endl;
-	networkTraceDFS(graph, 0);
-	cout << endl;
-	layerInspectionBFS(graph, 0);
-	cout << endl;
-	shortestPaths(graph, 0);
-	cout << endl;
-	minimumSpanningTree(graph, 0);
+	int choice = -1;
+	do {
+		printMenu();
+		if (!(cin >> choice)) {
+			if (cin.eof())
+				break; // input ended, stop instead of looping forever
+			cin.clear(); // non-numeric input: discard it and ask again
+			cin.ignore(numeric_limits<streamsize>::max(), '\n');
+			choice = -1;
+		}
+		cout << endl;
+
+		switch (choice) {
+		case 1:
+			printNetwork(graph);
+			break;
+		case 2:
+			layerInspectionBFS(graph, 0);
+			break;
+		case 3:
+			networkTraceDFS(graph, 0);
+			break;
+		case 4:
+			shortestPaths(graph, 0);
+			break;
+		case 5:
+			minimumSpanningTree(graph, 0);
+			break;
+		case 0:
+			cout << "Exiting program." << endl;
+			break;
+		default:
+			cout << "Invalid choice. Please enter a number from 0 to 5." << endl;
+		}
+		if (choice != 0)
+			cout << endl;
+	} while (choice != 0);
 	return 0;
 }
